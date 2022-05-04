@@ -40,7 +40,7 @@ int main()
   cudaMalloc(&d_hist, hist_size);
   cudaMemcpy(d_img, img, img_size, cudaMemcpyHostToDevice);
   cudaMemcpy(d_hist, hist, hist_size, cudaMemcpyHostToDevice);
-  dim3 gridDim(GX, GY, 1), blockDim((m - 2) / GX, (n -2) / GY, 1);
+  dim3 gridDim(GX, GY, 1), blockDim((n - 2) / GX, (m -2) / GY, 1);
   cs_lbp<<<gridDim, blockDim>>>(d_img, d_hist, threshold, n);
   cudaMemcpy(hist, d_hist, hist_size, cudaMemcpyDeviceToHost);
   printf("Histogram: \n");
