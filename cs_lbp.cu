@@ -1,3 +1,4 @@
+%%cu
 #include <cuda.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,7 +10,7 @@
 // n is column size of image
 // hist is the output histogram
 
-__global__ void cs_lbp(int *img, int *hist, int T, int n)
+__global__ void cs_lbp(int *img, int *hist, float T, int n)
 {
     int row = blockIdx.y * blockDim.y + threadIdx.y + 1;
     int col = blockIdx.x * blockDim.x + threadIdx.x + 1;
@@ -21,15 +22,8 @@ __global__ void cs_lbp(int *img, int *hist, int T, int n)
     hist[blockIdx.y * gridDim.x * 16 + blockIdx.x * 16 + val]++;
 }
 
-int GX = 3, GY = 3, m = 5, n = 5, threshold = 0;
-
-int main()
+float CS_LBP(int **img, int ***hist, int m, int n, int GX, int GY, float threshold)
 {
-  int img[5][5] = {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}, hist[GX][GY][16];
-  for (int i = 0; i < GX; i++)
-    for (int j = 0; j < GY; j++)
-      for (int k = 0; k < 16; k++)
-          hist[i][j][k] = 0;
   int *d_img, *d_hist;
   int img_size = m * n * sizeof(int), hist_size = GX * GY * sizeof(int) * 16; 
   cudaEvent_t start, stop;
@@ -47,6 +41,22 @@ int main()
   cudaEventSynchronize(stop);
   float elapsedTime;
   cudaEventElapsedTime(&elapsedTime, start, stop);
+  cudaFree(d_img);
+  cudaFree(d_hist);
+  return elapsedTime;
+}
+
+int m = 5, n = 5, GX = 3, GY = 3;
+float threshold = 0.01;
+
+int main()
+{
+  int img[5][5] = {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}, hist[GX][GY][16];
+  for (int i = 0; i < GX; i++)
+    for (int j = 0; j < GY; j++)
+      for (int k = 0; k < 16; k++)
+          hist[i][j][k] = 0;
+  float elapsedTime = CS_LBP((int **)img, (int ***)hist, m, n, GX, GY, threshold);
   printf("Time: %f\n", elapsedTime);
   printf("Histogram: \n");
   for (int i = 0; i < GX; i++)
@@ -54,7 +64,5 @@ int main()
       for (int k = 0; k < 16; k++)
         printf("%d ", hist[i][j][k]);
   printf("\n");
-  cudaFree(d_img);
-  cudaFree(d_hist);
   return 0;
 }
