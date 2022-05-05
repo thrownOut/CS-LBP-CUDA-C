@@ -52,12 +52,18 @@ float threshold = 0.01;
 int main()
 {
   int img[5][5] = {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}, hist[GX][GY][16];
-  for (int i = 0; i < GX; i++)
-    for (int j = 0; j < GY; j++)
-      for (int k = 0; k < 16; k++)
+  float time, totalTime = 0, avgTime; 
+  for (int i = 0; i < 100; i++)
+  {
+    for (int i = 0; i < GX; i++)
+      for (int j = 0; j < GY; j++)
+        for (int k = 0; k < 16; k++)
           hist[i][j][k] = 0;
-  float elapsedTime = CS_LBP((int **)img, (int ***)hist, m, n, GX, GY, threshold);
-  printf("Time: %f\n", elapsedTime);
+    time = CS_LBP((int **)img, (int ***)hist, m, n, GX, GY, threshold);
+    totalTime += time; 
+  }
+  avgTime = totalTime / 100;
+  printf("Average Time: %f\n", avgTime);
   printf("Histogram: \n");
   for (int i = 0; i < GX; i++)
     for (int j = 0; j < GY; j++)
