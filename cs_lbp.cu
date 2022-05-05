@@ -17,11 +17,7 @@ __global__ void cs_lbp(int *img, int *hist, int T, int n)
     int p2[4][2] = {{0, -1}, {-1, -1}, {-1, 0}, {-1, 1}};
     int val = 0;
     for (int i = 0; i < 4; i++)
-    {
-      val <<= 1;
-      if (img[(row + p1[i][0]) * n + (col + p1[i][1])] - img[(row + p2[i][0]) * n + (col + p2[i][1])] > T)
-        val |= 1;
-    }
+      val = (val<<1) | (img[(row + p1[i][0]) * n + (col + p1[i][1])] - img[(row + p2[i][0]) * n + (col + p2[i][1])] > T);
     hist[blockIdx.y * gridDim.x * 16 + blockIdx.x * 16 + val]++;
 }
 
@@ -36,6 +32,10 @@ int main()
           hist[i][j][k] = 0;
   int *d_img, *d_hist;
   int img_size = m * n * sizeof(int), hist_size = GX * GY * sizeof(int) * 16; 
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+  cudaEventRecord(start, 0);
   cudaMalloc(&d_img, img_size);
   cudaMalloc(&d_hist, hist_size);
   cudaMemcpy(d_img, img, img_size, cudaMemcpyHostToDevice);
@@ -43,6 +43,11 @@ int main()
   dim3 gridDim(GX, GY, 1), blockDim((n - 2) / GX, (m -2) / GY, 1);
   cs_lbp<<<gridDim, blockDim>>>(d_img, d_hist, threshold, n);
   cudaMemcpy(hist, d_hist, hist_size, cudaMemcpyDeviceToHost);
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+  float elapsedTime;
+  cudaEventElapsedTime(&elapsedTime, start, stop);
+  printf("Time: %f\n", elapsedTime);
   printf("Histogram: \n");
   for (int i = 0; i < GX; i++)
     for (int j = 0; j < GY; j++)
