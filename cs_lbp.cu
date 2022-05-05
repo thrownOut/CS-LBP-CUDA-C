@@ -1,4 +1,5 @@
 %%cu
+//https://colab.research.google.com/drive/1bUxbYpsPqw72fD-BMtPMkc54QU9trUR6?usp=sharing
 #include <cuda.h>
 #include <stdio.h>
 #include <stdlib.h>
